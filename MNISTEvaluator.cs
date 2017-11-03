@@ -16,13 +16,12 @@ namespace SimpleMNIST
 
         public MNISTEvaluator()
         {
-
             // Load the model.
-            // This example requires the MNIST.model.
+            // This example requires the MNISTConvolution.model.
             string modelFilePath = "MNISTConvolution.model";
             if (!File.Exists(modelFilePath))
             {
-                throw new FileNotFoundException(modelFilePath, string.Format("Error: The model '{0}' does not exist. Please follow instructions in README.md in <CNTK>/Examples/Image/Classification/ResNet to create the model.", modelFilePath));
+                throw new FileNotFoundException(modelFilePath, string.Format("Error: The model '{0}' does not exist. Please follow instructions in README.md in <CNTK>/Examples/Image/ConvNet to create the model.", modelFilePath));
             }
 
             _mnistFunction = Function.Load(modelFilePath, CpuDevice);
