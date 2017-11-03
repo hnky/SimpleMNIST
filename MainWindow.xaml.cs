@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -25,32 +23,10 @@ namespace SimpleMNIST
 
         private void recognizeButton_Click(object sender, RoutedEventArgs e)
         {
-            Bitmap bitmap = GetHandWrittenImage();
-            Tensor<float> imageData = ConvertImageToTensorData(bitmap);
-
-            List<MNISTResult> results = _evaluator.Evaluate(imageData);
+            List<MNISTResult> results = _evaluator.Evaluate(GetHandWrittenImage());
 
             // the result is sorted by confidence. so the first is the highest
             numberLabel.Text = results.FirstOrDefault()?.Digit.ToString() ?? "N/A";
-        }
-
-        private static Tensor<float> ConvertImageToTensorData(Bitmap image)
-        {
-            int width = image.Size.Width;
-            int height = image.Size.Height;
-            Tensor<float> tensor = new DenseTensor<float>(new[] { width, height }, true); // CNTK uses ColumnMajor layout
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    var color = image.GetPixel(x, y);
-                    float value = (color.R + color.G + color.B) / 3;
-
-                    // Turn to black background and white digit like MNIST dataset
-                    tensor[x, y] = (255 - value);
-                }
-            }
-            return tensor;
         }
 
         private void clearButton_Click(object sender, RoutedEventArgs e)
@@ -63,9 +39,6 @@ namespace SimpleMNIST
         {
             RenderTargetBitmap renderBitmap = new RenderTargetBitmap((int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96d, 96d, PixelFormats.Default);
             renderBitmap.Render(inkCanvas);
-
-            int imageHeight = (int)Math.Sqrt(_evaluator.ExpectedImageInputSize);
-            int imageWidth = imageHeight;
 
             BmpBitmapEncoder encoder = new BmpBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
@@ -81,19 +54,7 @@ namespace SimpleMNIST
                 bitmap = new Bitmap(Image.FromStream(ms));
             }
 
-            bitmap = ResizeImage(bitmap, new System.Drawing.Size(imageWidth, imageHeight));
             return bitmap;
-        }
-
-        private static Bitmap ResizeImage(Bitmap imgToResize, System.Drawing.Size size)
-        {
-            Bitmap b = new Bitmap(size.Width, size.Height);
-            using (Graphics g = Graphics.FromImage(b))
-            {
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
-            }
-            return b;
         }
 
         #region HideIcon

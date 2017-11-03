@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -16,26 +18,47 @@ namespace SimpleMNIST
 
         public MNISTEvaluator()
         {
-            // Load the model.
             // This example requires the MNISTConvolution.model.
-            string modelFilePath = "MNISTConvolution.model";
-            if (!File.Exists(modelFilePath))
-            {
-                throw new FileNotFoundException(modelFilePath, string.Format("Error: The model '{0}' does not exist. Please follow instructions in README.md in <CNTK>/Examples/Image/ConvNet to create the model.", modelFilePath));
-            }
-
-            _mnistFunction = Function.Load(modelFilePath, CpuDevice);
-
-            // Get input variable. The model has only one single input.
-            _mnistInput = _mnistFunction.Arguments.Single();
+            LoadModel("MNISTConvolution.model");
         }
 
-        public int ExpectedImageInputSize => _mnistInput.Shape.TotalSize;
+        /// <summary>
+        /// Returns the digit represented by the image.
+        /// </summary>
+        public List<MNISTResult> Evaluate(Bitmap image)
+        {
+            Tensor<float> imageData = ConvertImageToTensorData(image);
+
+            return Evaluate(imageData);
+        }
 
         /// <summary>
-        /// Returns the digit represented by the imageData.
+        /// Converts the image into the expected data for the MNIST model.
         /// </summary>
-        public List<MNISTResult> Evaluate(Tensor<float> imageData)
+        private Tensor<float> ConvertImageToTensorData(Bitmap image)
+        {
+            int width = _mnistInput.Shape.Dimensions[0];
+            int height = _mnistInput.Shape.Dimensions[1];
+            image = ResizeImage(image, new Size(width, height));
+
+            Tensor<float> imageData = new DenseTensor<float>(new[] { width, height }, true); // CNTK uses ColumnMajor layout
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    Color color = image.GetPixel(x, y);
+                    float pixelValue = (color.R + color.G + color.B) / 3;
+
+                    // Turn to black background and white digit like MNIST model expects
+                    imageData[x, y] = (255 - pixelValue);
+                }
+            }
+
+            return imageData;
+        }
+
+        private List<MNISTResult> Evaluate(Tensor<float> imageData)
         {
             try
             {
@@ -46,7 +69,7 @@ namespace SimpleMNIST
                 var outputDataMap = new Dictionary<Variable, Value>();
 
                 // Create input data map
-                var inputVal = Value.CreateBatch(_mnistInput.Shape, imageData, CpuDevice);
+                Value inputVal = Value.CreateBatch(_mnistInput.Shape, imageData, CpuDevice);
                 inputDataMap.Add(_mnistInput, inputVal);
 
                 // Create output data map
@@ -56,11 +79,11 @@ namespace SimpleMNIST
                 _mnistFunction.Evaluate(inputDataMap, outputDataMap, CpuDevice);
 
                 // Get evaluate result as dense output
-                var outputVal = outputDataMap[outputVar];
+                Value outputVal = outputDataMap[outputVar];
 
                 // The model has only one single output - a list of 10 floats
                 // representing the likelihood of that index being the digit
-                var outputData = outputVal.GetDenseData<float>(outputVar).Single();
+                IList<float> outputData = outputVal.GetDenseData<float>(outputVar).Single();
 
                 List<MNISTResult> results = new List<MNISTResult>(outputData.Count);
                 for (int i = 0; i < outputData.Count; i++)
@@ -69,7 +92,7 @@ namespace SimpleMNIST
                 }
 
                 // sort so the highest confidence is first
-                results.Sort((left, right) => right.Confidence.CompareTo(left.Confidence));
+                results = results.OrderByDescending(r => r.Confidence).ToList();
 
                 return results;
             }
@@ -78,6 +101,32 @@ namespace SimpleMNIST
                 Debug.WriteLine(ex.ToString());
                 return new List<MNISTResult>();
             }
+        }
+
+        private void LoadModel(string modelFilePath)
+        {
+            if (!File.Exists(modelFilePath))
+            {
+                throw new FileNotFoundException(
+                    modelFilePath,
+                    $"Error: The model '{modelFilePath}' does not exist. Please follow instructions in README.md in <CNTK>/Examples/Image/ConvNet to create the model.");
+            }
+
+            _mnistFunction = Function.Load(modelFilePath, CpuDevice);
+
+            // Get input variable. The model has only one single input.
+            _mnistInput = _mnistFunction.Arguments.Single();
+        }
+
+        private static Bitmap ResizeImage(Bitmap imgToResize, Size size)
+        {
+            Bitmap b = new Bitmap(size.Width, size.Height);
+            using (Graphics g = Graphics.FromImage(b))
+            {
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
+            }
+            return b;
         }
     }
 
