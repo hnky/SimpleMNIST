@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SimpleMNIST
 {
-    public class MNISTECloudEvaluator
+    public class MNISTCloudEvaluator
     {
 
         public string Evaluate(Bitmap image, string url)

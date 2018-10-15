@@ -72,7 +72,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MNISTEcloudEvaluator.cs" />
+    <Compile Include="MNISTCloudEvaluator.cs" />
     <Compile Include="MNISTEvaluator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

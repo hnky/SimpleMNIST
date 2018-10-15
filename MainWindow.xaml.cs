@@ -16,7 +16,7 @@ namespace SimpleMNIST
     {
         private MNISTEvaluator _evaluator = new MNISTEvaluator();
 
-        private MNISTECloudEvaluator _mnisteCloudEvaluator = new MNISTECloudEvaluator();
+        private MNISTCloudEvaluator _mnisteCloudEvaluator = new MNISTCloudEvaluator();
 
         public MainWindow()
         {
