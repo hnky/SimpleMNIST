@@ -16,6 +16,8 @@ namespace SimpleMNIST
     {
         private MNISTEvaluator _evaluator = new MNISTEvaluator();
 
+        private MNISTECloudEvaluator _mnisteCloudEvaluator = new MNISTECloudEvaluator();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -27,12 +29,18 @@ namespace SimpleMNIST
 
             // the result is sorted by confidence. so the first is the highest
             numberLabel.Text = results.FirstOrDefault()?.Digit.ToString() ?? "N/A";
+
+
+            var cloudResult = _mnisteCloudEvaluator.Evaluate(GetHandWrittenImage(), CloudUrl.Text);
+
+            numberLabelCloud.Text = cloudResult;
         }
 
         private void clearButton_Click(object sender, RoutedEventArgs e)
         {
             inkCanvas.Strokes.Clear();
             numberLabel.Text = "";
+            numberLabelCloud.Text = "";
         }
 
         private Bitmap GetHandWrittenImage()
