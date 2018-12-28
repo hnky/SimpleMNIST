@@ -14,9 +14,9 @@ namespace SimpleMNIST
     /// </summary>
     public partial class MainWindow : Window
     {
-        private MNISTEvaluator _evaluator = new MNISTEvaluator();
 
-        private MNISTCloudEvaluator _mnisteCloudEvaluator = new MNISTCloudEvaluator();
+
+        private readonly MNISTCloudEvaluator _mnisteCloudEvaluator = new MNISTCloudEvaluator();
 
         public MainWindow()
         {
@@ -25,12 +25,6 @@ namespace SimpleMNIST
 
         private void recognizeButton_Click(object sender, RoutedEventArgs e)
         {
-            List<MNISTResult> results = _evaluator.Evaluate(GetHandWrittenImage());
-
-            // the result is sorted by confidence. so the first is the highest
-            numberLabel.Text = results.FirstOrDefault()?.Digit.ToString() ?? "N/A";
-
-
             var cloudResult = _mnisteCloudEvaluator.Evaluate(GetHandWrittenImage(), CloudUrl.Text);
 
             numberLabelCloud.Text = cloudResult;
@@ -39,7 +33,7 @@ namespace SimpleMNIST
         private void clearButton_Click(object sender, RoutedEventArgs e)
         {
             inkCanvas.Strokes.Clear();
-            numberLabel.Text = "";
+
             numberLabelCloud.Text = "";
         }
 
