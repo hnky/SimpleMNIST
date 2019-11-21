@@ -25,7 +25,7 @@ namespace SimpleMNIST
 
         private void recognizeButton_Click(object sender, RoutedEventArgs e)
         {
-            var cloudResult = _mnisteCloudEvaluator.Evaluate(GetHandWrittenImage(), CloudUrl.Text);
+            var cloudResult = _mnisteCloudEvaluator.Evaluate(GetHandWrittenImage(), CloudUrl.Text, CloudToken.Text);
 
             numberLabelCloud.Text = cloudResult;
         }

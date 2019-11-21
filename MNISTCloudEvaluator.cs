@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,7 +13,7 @@ namespace SimpleMNIST
     public class MNISTCloudEvaluator
     {
 
-        public string Evaluate(Bitmap image, string url)
+        public string Evaluate(Bitmap image, string url,string token = null)
         {
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -25,6 +26,9 @@ namespace SimpleMNIST
             string jsonData = "{\"data\": [["+body+"]]}";
             using (var client = new HttpClient())
             {
+                if (!string.IsNullOrWhiteSpace(token)) {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
                 var response = client.PostAsync(url,new StringContent(jsonData, Encoding.UTF8, "application/json")).Result;
                 result = response.Content.ReadAsStringAsync().Result;
                 result = result.Replace("\"[", "").Replace("]\"","");
